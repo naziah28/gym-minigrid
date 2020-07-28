@@ -1,6 +1,7 @@
 from gym_minigrid.minigrid import *
 from gym_minigrid.register import register
 
+
 class PutNearEnv(MiniGridEnv):
     """
     Environment in which the agent is instructed to place an object near
@@ -10,7 +11,7 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=2
+        numObjs=4
     ):
         self.numObjs = numObjs
 
@@ -31,8 +32,6 @@ class PutNearEnv(MiniGridEnv):
         self.grid.vert_wall(width-1, 0)
 
         # Types and colors of objects we can generate
-        types = ['key', 'ball', 'box']
-
         objs = []
         objPos = []
 
@@ -45,40 +44,46 @@ class PutNearEnv(MiniGridEnv):
             return False
 
         # Until we have generated all the objects
-        while len(objs) < self.numObjs:
-            objType = self._rand_elem(types)
-            objColor = self._rand_elem(COLOR_NAMES)
+        # while len(objs) < self.numObjs:
+        #     objType = self._rand_elem(types)
+        #     objColor = self._rand_elem(COLOR_NAMES)
 
             # If this object already exists, try again
-            if (objType, objColor) in objs:
-                continue
+            # if (objType, objColor) in objs:
+            #     continue
 
-            if objType == 'key':
-                obj = Key(objColor)
-            elif objType == 'ball':
-                obj = Ball(objColor)
-            elif objType == 'box':
-                obj = Box(objColor)
+            # if objType == 'key':
+            #     obj = Key(objColor)
+            # elif objType == 'ball':
 
-            pos = self.place_obj(obj, reject_fn=near_obj)
+        # elif objType == 'box':
 
-            objs.append((objType, objColor))
-            objPos.append(pos)
+        # Generate single dig block
+        obj = Ball('blue')
+        pos = self.place_obj(obj, reject_fn=near_obj)
+        objs.append(('ball', 'blue'))
+        objPos.append(pos)
+
+        # Generate crusher 
+        obj = Box('red')
+        pos = self.place_obj(obj, reject_fn=near_obj)
+        objs.append(('box', 'red'))
+        objPos.append(pos)
 
         # Randomize the agent start position and orientation
         self.place_agent()
 
         # Choose a random object to be moved
-        objIdx = self._rand_int(0, len(objs))
-        self.move_type, self.moveColor = objs[objIdx]
+        objIdx = 0 #self._rand_int(0, len(objs))
+        self.move_type, self.moveColor = 'ball', 'blue' #objs[objIdx]
         self.move_pos = objPos[objIdx]
 
         # Choose a target object (to put the first object next to)
         while True:
-            targetIdx = self._rand_int(0, len(objs))
+            targetIdx = 1
             if targetIdx != objIdx:
                 break
-        self.target_type, self.target_color = objs[targetIdx]
+        self.target_type, self.target_color = 'box', 'red' #objs[targetIdx]
         self.target_pos = objPos[targetIdx]
 
         self.mission = 'put the %s %s near the %s %s' % (
@@ -111,13 +116,23 @@ class PutNearEnv(MiniGridEnv):
 
         return obs, reward, done, info
 
+class PutNear7x7N4(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=7, numObjs=2)
+
 class PutNear8x8N3(PutNearEnv):
     def __init__(self):
         super().__init__(size=8, numObjs=3)
 
+
 register(
     id='MiniGrid-PutNear-6x6-N2-v0',
     entry_point='gym_minigrid.envs:PutNearEnv'
+)
+
+register(
+    id='MiniGrid-PutNear-7x7-N4-v0',
+    entry_point='gym_minigrid.envs:PutNear7x7N4'
 )
 
 register(

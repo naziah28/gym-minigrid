@@ -61,6 +61,10 @@ class EmptyEnv16x16(EmptyEnv):
     def __init__(self, **kwargs):
         super().__init__(size=16, **kwargs)
 
+class EmptyEnv100x100(EmptyEnv):
+    def __init__(self, **kwargs):
+        super().__init__(size=100, **kwargs)
+
 register(
     id='MiniGrid-Empty-5x5-v0',
     entry_point='gym_minigrid.envs:EmptyEnv5x5'
@@ -89,4 +93,10 @@ register(
 register(
     id='MiniGrid-Empty-16x16-v0',
     entry_point='gym_minigrid.envs:EmptyEnv16x16'
+)
+
+
+register(
+    id='MiniGrid-Empty-100x100-v0',
+    entry_point='gym_minigrid.envs:EmptyEnv100x100'
 )

@@ -103,7 +103,3 @@ register(
     entry_point='gym_minigrid.envs:FetchEnv6x6N2'
 )
 
-register(
-    id='MiniGrid-Fetch-8x8-N3-v0',
-    entry_point='gym_minigrid.envs:FetchEnv'
-)
