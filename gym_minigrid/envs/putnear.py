@@ -31,6 +31,18 @@ class PutNearEnv(MiniGridEnv):
         self.grid.vert_wall(0, 0)
         self.grid.vert_wall(width-1, 0)
 
+        # add in maze walls
+        walls = [
+            (2, 1), (3, 1), (4, 1), (5, 1),
+            (4, 3),
+            (1, 4), (2, 4), (3, 4), (4, 4),
+            (1, 5), (2, 5), (3, 5), (4, 5)
+        ]
+
+        for wall in walls:
+            self.grid.set(*wall, Wall())
+
+
         # Types and colors of objects we can generate
         objs = []
         objPos = []
@@ -45,7 +57,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        pos = (4,4)
+        pos = (5, 5)
         self.put_obj(obj, *pos)
         objs.append(('box', 'red'))
         objPos.append(pos)
@@ -99,6 +111,9 @@ class PutNearEnv(MiniGridEnv):
         if action == self.actions.pickup and self.carrying:
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 done = True
+            else:
+                pass
+                # reward += 0.1
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
@@ -109,7 +124,6 @@ class PutNearEnv(MiniGridEnv):
 
                     print('success!')
             done = True
-
 
         return obs, reward, done, info
 
