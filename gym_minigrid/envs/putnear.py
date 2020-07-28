@@ -34,9 +34,8 @@ class PutNearEnv(MiniGridEnv):
         # add in maze walls
         walls = [
             (2, 1), (3, 1), (4, 1), (5, 1),
-            (4, 3),
-            (1, 4), (2, 4), (3, 4), (4, 4),
-            (1, 5), (2, 5), (3, 5), (4, 5)
+            (1, 4), (2, 4), (3, 4),
+            (1, 5), (2, 5), (3, 5),
         ]
 
         for wall in walls:
@@ -57,10 +56,10 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        pos = (5, 5)
-        self.put_obj(obj, *pos)
+        goal_pos = (6, 6)
+        self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
-        objPos.append(pos)
+        objPos.append(goal_pos)
 
         # Generate single dig block
         obj = Ball('blue')
@@ -89,7 +88,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Choose a target object (to put the first object next to)
         self.target_type, self.target_color = 'box', 'red' #objs[targetIdx]
-        self.target_pos = (6,6)
+        self.target_pos = goal_pos
 
         self.mission = 'put the %s %s near the %s %s' % (
             self.moveColor,
@@ -109,6 +108,7 @@ class PutNearEnv(MiniGridEnv):
 
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
+            reward += 0.01
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 done = True
             else:
@@ -119,8 +119,8 @@ class PutNearEnv(MiniGridEnv):
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 print('picked up object')
-                if abs(ox - tx) <= 0 and abs(oy - ty) <= 0:
-                    reward = self._reward()
+                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+                    reward += self._reward()
 
                     print('success!')
             done = True
