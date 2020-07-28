@@ -962,6 +962,20 @@ class MiniGridEnv(gym.Env):
 
         return pos
 
+    def put_agent(
+        self,
+        i,j, rand_dir=True
+    ):
+        """
+        Set the agent's starting point at an empty position in the grid
+        """
+
+        self.agent_pos = (i, j)
+
+        if rand_dir:
+            self.agent_dir = self._rand_int(0, 4)
+
+
     @property
     def dir_vec(self):
         """
@@ -1221,7 +1235,7 @@ class MiniGridEnv(gym.Env):
 
         return img
 
-    def render(self, mode='human', reward=False, close=False, highlight=True, tile_size=TILE_PIXELS):
+    def render(self, mode='human', episode_num=0, reward=False, close=False, highlight=True, tile_size=TILE_PIXELS):
         """
         Render the whole-grid human view
         """
@@ -1278,6 +1292,6 @@ class MiniGridEnv(gym.Env):
             self.window.show_img(img)
             # self.window.set_caption(self.mission)
             # if reward:
-            self.window.set_caption("{} \nreward: {}".format(self.mission, reward))
+            self.window.set_caption("{} \n episode {} \nreward: {}".format(self.mission, episode_num, reward))
 
         return img

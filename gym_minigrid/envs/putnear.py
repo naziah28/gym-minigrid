@@ -45,21 +45,30 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        pos = self.place_obj(obj, reject_fn=near_obj)
+        pos = (4,4)
+        self.put_obj(obj, *pos)
         objs.append(('box', 'red'))
         objPos.append(pos)
 
-        # Until we have generated all the objects
-        while len(objs) < self.numObjs:
+        # Generate single dig block
+        obj = Ball('blue')
+        pos = (2,3)
+        self.put_obj(obj, *pos)
+        objs.append(('ball', 'blue'))
+        objPos.append(pos)
 
-            # Generate single dig block
-            obj = Ball('blue')
-            pos = self.place_obj(obj, reject_fn=near_obj)
-            objs.append(('ball', 'blue'))
-            objPos.append(pos)
+        # TODO: further down will need to be smart abt how we place these
+        # # Until we have generated all the objects
+        # while len(objs) < self.numObjs:
+        #
+        #     # Generate single dig block
+        #     obj = Ball('blue')
+        #     pos = self.place_obj(obj, reject_fn=near_obj)
+        #     objs.append(('ball', 'blue'))
+        #     objPos.append(pos)
 
         # Randomize the agent start position and orientation
-        self.place_agent()
+        self.put_agent(1, 1)
 
         # Choose a random object to be moved
         objIdx = 0 #self._rand_int(0, len(objs))
@@ -67,12 +76,8 @@ class PutNearEnv(MiniGridEnv):
         self.move_pos = objPos[objIdx]
 
         # Choose a target object (to put the first object next to)
-        while True:
-            targetIdx = 1
-            if targetIdx != objIdx:
-                break
         self.target_type, self.target_color = 'box', 'red' #objs[targetIdx]
-        self.target_pos = objPos[targetIdx]
+        self.target_pos = (6,6)
 
         self.mission = 'put the %s %s near the %s %s' % (
             self.moveColor,
