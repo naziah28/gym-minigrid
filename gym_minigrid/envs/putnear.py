@@ -11,7 +11,7 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=4
+        numObjs=6
     ):
         self.numObjs = numObjs
 
@@ -43,32 +43,20 @@ class PutNearEnv(MiniGridEnv):
                     return True
             return False
 
-        # Until we have generated all the objects
-        # while len(objs) < self.numObjs:
-        #     objType = self._rand_elem(types)
-        #     objColor = self._rand_elem(COLOR_NAMES)
-
-            # If this object already exists, try again
-            # if (objType, objColor) in objs:
-            #     continue
-
-            # if objType == 'key':
-            #     obj = Key(objColor)
-            # elif objType == 'ball':
-
-        # elif objType == 'box':
-
-        # Generate single dig block
-        obj = Ball('blue')
-        pos = self.place_obj(obj, reject_fn=near_obj)
-        objs.append(('ball', 'blue'))
-        objPos.append(pos)
-
-        # Generate crusher 
+        # Generate crusher
         obj = Box('red')
         pos = self.place_obj(obj, reject_fn=near_obj)
         objs.append(('box', 'red'))
         objPos.append(pos)
+
+        # Until we have generated all the objects
+        while len(objs) < self.numObjs:
+
+            # Generate single dig block
+            obj = Ball('blue')
+            pos = self.place_obj(obj, reject_fn=near_obj)
+            objs.append(('ball', 'blue'))
+            objPos.append(pos)
 
         # Randomize the agent start position and orientation
         self.place_agent()
@@ -110,15 +98,19 @@ class PutNearEnv(MiniGridEnv):
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
-                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+                print('picked up object')
+                if abs(ox - tx) <= 0 and abs(oy - ty) <= 0:
                     reward = self._reward()
+
+                    print('success!')
             done = True
+
 
         return obs, reward, done, info
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
-        super().__init__(size=7, numObjs=2)
+        super().__init__(size=7, numObjs=3)
 
 class PutNear8x8N3(PutNearEnv):
     def __init__(self):
