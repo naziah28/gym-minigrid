@@ -1,6 +1,6 @@
 from gym_minigrid.minigrid import *
 from gym_minigrid.register import register
-
+import random
 
 class PutNearEnv(MiniGridEnv):
     """
@@ -14,6 +14,7 @@ class PutNearEnv(MiniGridEnv):
         numObjs=6
     ):
         self.numObjs = numObjs
+        self.grid_size = size
 
         super().__init__(
             grid_size=size,
@@ -33,14 +34,15 @@ class PutNearEnv(MiniGridEnv):
 
         # add in maze walls
         walls = [
-            (2, 1), (3, 1), (4, 1), (5, 1),
-            (1, 4), (2, 4), (3, 4),
-            (1, 5), (2, 5), (3, 5),
+            # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
+            (2, 2), (2, 2), (3, 2), (4, 2), (5, 2),
+            (5, 3),
+            (1, 4), (2, 4), (3, 4), (5, 4),
+            (1, 5), (2, 5), (3, 5), (5, 5)
         ]
 
         for wall in walls:
             self.grid.set(*wall, Wall())
-
 
         # Types and colors of objects we can generate
         objs = []
@@ -56,27 +58,26 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (6, 6)
+        goal_pos = (self.grid_size-2, self.grid_size-2)
         self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
         objPos.append(goal_pos)
 
         # Generate single dig block
         obj = Ball('blue')
-        pos = (2,3)
+        pos = random.choice([(2,3), (4,6), (6,3)])
         self.put_obj(obj, *pos)
         objs.append(('ball', 'blue'))
         objPos.append(pos)
 
         # TODO: further down will need to be smart abt how we place these
-        # # Until we have generated all the objects
+        # Until we have generated all the objects
         # while len(objs) < self.numObjs:
-        #
-        #     # Generate single dig block
-        #     obj = Ball('blue')
-        #     pos = self.place_obj(obj, reject_fn=near_obj)
-        #     objs.append(('ball', 'blue'))
-        #     objPos.append(pos)
+            # Generate single dig block
+            # obj = Ball('blue')
+            # pos = self.place_obj(obj, reject_fn=near_obj)
+            # objs.append(('ball', 'blue'))
+            # objPos.append(pos)
 
         # Randomize the agent start position and orientation
         self.put_agent(1, 1)
@@ -135,6 +136,10 @@ class PutNear8x8N3(PutNearEnv):
     def __init__(self):
         super().__init__(size=8, numObjs=3)
 
+class PutNear12x12N5(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=12, numObjs=3)
+
 
 register(
     id='MiniGrid-PutNear-6x6-N2-v0',
@@ -149,4 +154,9 @@ register(
 register(
     id='MiniGrid-PutNear-8x8-N3-v0',
     entry_point='gym_minigrid.envs:PutNear8x8N3'
+)
+
+register(
+    id='MiniGrid-PutNear-12x12-N5-v0',
+    entry_point='gym_minigrid.envs:PutNear12x12N5'
 )
