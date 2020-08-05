@@ -1,6 +1,25 @@
 from gym_minigrid.minigrid import *
 from gym_minigrid.register import register
+import networkx as nx
 import random
+
+
+def get_graph(path_nodes):
+    G = nx.Graph()
+
+    # Add all nodes into graph
+    for coord in path_nodes:
+        G.add_node(coord)
+
+    for node_a in path_nodes:
+        for node_b in path_nodes:
+            # make sure they not the same node
+            if node_a != node_b:
+                if (node_a[0] == node_b[0] and abs(node_a[1]-node_b[1]) == 1) or \
+                        ((node_a[1] == node_b[1]) and (abs(node_a[0]-node_b[0]) == 1)):
+                    G.add_edge(node_a, node_b)
+    return G
+
 
 class PutNearEnv(MiniGridEnv):
     """
@@ -21,6 +40,7 @@ class PutNearEnv(MiniGridEnv):
         self.walls = walls
         self.path = path
         self.digblock_positions = digblock_positions
+        self.graph = get_graph(path)
 
         super().__init__(
             grid_size=size,
@@ -38,14 +58,11 @@ class PutNearEnv(MiniGridEnv):
         self.grid.vert_wall(0, 0)
         self.grid.vert_wall(width-1, 0)
 
-        print(self.width)
-
         # add in maze walls
         if len(self.path)<1:
             for wall in self.walls:
                 self.grid.set(*wall, Wall())
         else:
-            print(self.grid_size)
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     if (j, i) not in self.path:
@@ -78,15 +95,6 @@ class PutNearEnv(MiniGridEnv):
             objs.append(('ball', 'blue'))
             objPos.append(pos)
 
-        # TODO: further down will need to be smart abt how we place these
-        # Until we have generated all the objects
-        # while len(objs) < self.numObjs:
-            # Generate single dig block
-            # obj = Ball('blue')
-            # pos = self.place_obj(obj, reject_fn=near_obj)
-            # objs.append(('ball', 'blue'))
-            # objPos.append(pos)
-
         # Randomize the agent start position and orientation
         self.put_agent(1, 1)
 
@@ -107,6 +115,10 @@ class PutNearEnv(MiniGridEnv):
         )
 
     def step(self, action):
+
+        agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(10, 10))))
+
         preCarrying = self.carrying
 
         obs, reward, done, info = super().step(action)
@@ -122,17 +134,19 @@ class PutNearEnv(MiniGridEnv):
                 done = True
             else:
                 pass
-                # reward += 0.1
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 print('picked up object')
+
+                # reward += (10 - 0.5 * len(nx.shortest_path(self.graph, source=agent_pos, target=(10, 10))))
+
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += self._reward()
-
                     print('success!')
             done = True
+
 
         return obs, reward, done, info
 
@@ -159,8 +173,8 @@ class PutNear12x12N5(PutNearEnv):
     def __init__(self):
         super().__init__(size=12, numObjs=4,
                         path=[
-                            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1),(9,1), (10,1),
-                            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (10, 2),
+                            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
+                            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
                             (1, 3), (5, 3), (10, 3),
                             (1, 4), (5, 4), (10, 4),
                             (1, 5), (5, 5), (10, 5),
@@ -169,7 +183,7 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
                             (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                        digblock_positions=[(1, 2), (5, 1), (9, 6), (10, 1), (6, 9)])
+                        digblock_positions=[(6, 2), (10, 6), (10, 1), (7, 9)])
 
 
 register(
