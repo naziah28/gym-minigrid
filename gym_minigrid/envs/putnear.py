@@ -11,10 +11,16 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=6
+        numObjs=6,
+        walls=[],
+        path=[],
+        digblock_positions=[]
     ):
         self.numObjs = numObjs
         self.grid_size = size
+        self.walls = walls
+        self.path = path
+        self.digblock_positions = digblock_positions
 
         super().__init__(
             grid_size=size,
@@ -32,17 +38,18 @@ class PutNearEnv(MiniGridEnv):
         self.grid.vert_wall(0, 0)
         self.grid.vert_wall(width-1, 0)
 
-        # add in maze walls
-        walls = [
-            # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
-            (2, 2), (2, 2), (3, 2), (4, 2), (5, 2),
-            (5, 3),
-            (1, 4), (2, 4), (3, 4), (5, 4),
-            (1, 5), (2, 5), (3, 5), (5, 5)
-        ]
+        print(self.width)
 
-        for wall in walls:
-            self.grid.set(*wall, Wall())
+        # add in maze walls
+        if len(self.path)<1:
+            for wall in self.walls:
+                self.grid.set(*wall, Wall())
+        else:
+            print(self.grid_size)
+            for i in range(1, self.grid_size - 1):
+                for j in range(1, self.grid_size - 1):
+                    if (j, i) not in self.path:
+                        self.grid.set(j, i, Wall())
 
         # Types and colors of objects we can generate
         objs = []
@@ -65,10 +72,11 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate single dig block
         obj = Ball('blue')
-        pos = random.choice([(2,3), (4,6), (6,3)])
-        self.put_obj(obj, *pos)
-        objs.append(('ball', 'blue'))
-        objPos.append(pos)
+        blocks = random.sample(self.digblock_positions, self.numObjs)
+        for pos in blocks:
+            self.put_obj(obj, *pos)
+            objs.append(('ball', 'blue'))
+            objPos.append(pos)
 
         # TODO: further down will need to be smart abt how we place these
         # Until we have generated all the objects
@@ -128,17 +136,40 @@ class PutNearEnv(MiniGridEnv):
 
         return obs, reward, done, info
 
+
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
         super().__init__(size=7, numObjs=3)
 
+
 class PutNear8x8N3(PutNearEnv):
     def __init__(self):
-        super().__init__(size=8, numObjs=3)
+        super().__init__(size=8, numObjs=3,
+                         walls=[
+                            # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
+                            (2, 2), (2, 2), (3, 2), (4, 2), (5, 2),
+                            (5, 3),
+                            (1, 4), (2, 4), (3, 4), (5, 4),
+                            (1, 5), (2, 5), (3, 5), (5, 5)],
+                         digblock_positions=[(2,3), (4,6), (6,3)]
+                         )
+
 
 class PutNear12x12N5(PutNearEnv):
     def __init__(self):
-        super().__init__(size=12, numObjs=3)
+        super().__init__(size=12, numObjs=4,
+                        path=[
+                            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1),(9,1), (10,1),
+                            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (10, 2),
+                            (1, 3), (5, 3), (10, 3),
+                            (1, 4), (5, 4), (10, 4),
+                            (1, 5), (5, 5), (10, 5),
+                            (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
+                            (1, 7), (7, 7), (10, 7),
+                            (1, 8), (7, 8), (10, 8),
+                            (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
+                            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
+                        digblock_positions=[(1, 2), (5, 1), (9, 6), (10, 1), (6, 9)])
 
 
 register(
