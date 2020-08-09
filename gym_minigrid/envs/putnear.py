@@ -3,6 +3,14 @@ from gym_minigrid.register import register
 import networkx as nx
 import random
 
+import logging
+import logging.config
+
+# logging.config.fileConfig(fname='file.conf', disable_existing_loggers=False)
+
+# Get the logger specified in the file
+logger = logging.getLogger(__name__)
+
 
 def get_graph(path_nodes):
     G = nx.Graph()
@@ -129,7 +137,7 @@ class PutNearEnv(MiniGridEnv):
 
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
-            reward += 0.01
+            reward += self._reward()
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 done = True
             else:
@@ -138,15 +146,12 @@ class PutNearEnv(MiniGridEnv):
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
-                print('picked up object')
-
-                # reward += (10 - 0.5 * len(nx.shortest_path(self.graph, source=agent_pos, target=(10, 10))))
+                logger.info('picked up object')
 
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += self._reward()
-                    print('success!')
+                    logger.info('success!')
             done = True
-
 
         return obs, reward, done, info
 
@@ -183,7 +188,7 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
                             (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                        digblock_positions=[(6, 2), (10, 6), (10, 1), (7, 9)])
+                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
 
 register(

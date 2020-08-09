@@ -6,6 +6,16 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from .rendering import *
 
+import logging
+import logging.config
+
+# logging.config.fileConfig(fname='file.conf', disable_existing_loggers=False)
+
+# Get the logger specified in the file
+logger = logging.getLogger(__name__)
+
+logger.debug('This is a debug message')
+
 # Size in pixels of a tile in the full-scale human view
 TILE_PIXELS = 32
 
@@ -650,7 +660,7 @@ class MiniGridEnv(gym.Env):
         max_steps=100,
         see_through_walls=False,
         seed=1337,
-        agent_view_size=7
+        agent_view_size=12
     ):
         # Can't set both grid_size and width/height
         if grid_size:
@@ -1295,3 +1305,5 @@ class MiniGridEnv(gym.Env):
             self.window.set_caption("{} \n episode {} \nreward: {}".format(self.mission, episode_num, reward))
 
         return img
+
+
