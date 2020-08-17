@@ -1006,6 +1006,7 @@ class MiniGridEnv(gym.Env):
     def step(self, action):
         self.step_count += 1
 
+
         reward = -0.05
         done = False
 
@@ -1052,6 +1053,7 @@ class MiniGridEnv(gym.Env):
 
         # Toggle/activate an object
         elif action == self.actions.toggle:
+            reward = -100
             if fwd_cell:
                 fwd_cell.toggle(self, fwd_pos)
 
@@ -1067,7 +1069,7 @@ class MiniGridEnv(gym.Env):
 
         obs = self.gen_obs()
 
-        return obs, reward, done, {}
+        return obs, reward, done, {}, self.step_count
 
     def gen_obs_grid(self):
         """
