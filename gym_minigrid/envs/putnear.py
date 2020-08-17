@@ -100,7 +100,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (8, 1)
+        goal_pos = (5, 6)
         self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
         objPos.append(goal_pos)
