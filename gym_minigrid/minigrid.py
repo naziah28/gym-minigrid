@@ -712,6 +712,8 @@ class MiniGridEnv(gym.Env):
         Compute the reward to be given upon success
         """
 
+        # potential discount factor
+        # TODO: open to change
         return 1 - 0.9 * (self.step_count / self.max_steps)
 
     def _rand_int(self, low, high):
@@ -1004,7 +1006,7 @@ class MiniGridEnv(gym.Env):
     def step(self, action):
         self.step_count += 1
 
-        reward = 0
+        reward = -0.05
         done = False
 
         # Get the position in front of the agent
