@@ -11,6 +11,15 @@ import logging.config
 # Get the logger specified in the file
 logger = logging.getLogger(__name__)
 
+ACTIONS = {
+    0: "left",
+    1: "right",
+    2: "forward",
+    3: "pickup",
+    4: "drop",
+    5: "toggle",
+    6: "done"
+}
 
 def get_graph(path_nodes):
     G = nx.Graph()
@@ -49,6 +58,9 @@ class PutNearEnv(MiniGridEnv):
         self.path = path
         self.digblock_positions = digblock_positions
         self.graph = get_graph(path)
+        self.picked_up = 0
+
+        logger.info("STARTING")
 
         super().__init__(
             grid_size=size,
@@ -56,6 +68,7 @@ class PutNearEnv(MiniGridEnv):
             # Set this to True for maximum speed
             see_through_walls=True
         )
+
 
     def _gen_grid(self, width, height):
         self.grid = Grid(width, height)
@@ -90,7 +103,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (self.grid_size-2, self.grid_size-2)
+        goal_pos = (5, 2) #(5, 6)
         self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
         objPos.append(goal_pos)
@@ -125,11 +138,10 @@ class PutNearEnv(MiniGridEnv):
     def step(self, action):
 
         agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(10, 10))))
 
         preCarrying = self.carrying
 
-        obs, reward, done, info = super().step(action)
+        obs, reward, done, info, step_count = super().step(action)
 
         u, v = self.dir_vec
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
@@ -137,21 +149,51 @@ class PutNearEnv(MiniGridEnv):
 
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
-            # TODO: should be a negative reward
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 # todo: give a large penalty
+                reward += -1
                 done = True
             else:
-                logger.info('picked up object')
+                reward += 2
+                logger.info('{}: \tpicked up object {}'.format(step_count, reward))
+                self.picked_up = step_count
                 pass
 
-        # If successfully dropping an object near the target
-        if action == self.actions.drop and preCarrying:
-            if self.grid.get(ox, oy) is preCarrying:
-                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-                    reward += self._reward()
-                    logger.info('success!')
-            done = True
+        # non functional, purely for logging purposes
+        if preCarrying and step_count > self.picked_up:
+            reward += 0.5
+            logger.info("{}: \ttaking action: \t'{} \t reward: {}' ".format(step_count, ACTIONS[action], reward))
+
+        # # If successfully dropping an object near the target
+        # if action == self.actions.drop and preCarrying:
+        #     logger.info('{}: \tattemping drop {}'.format(step_count, reward))
+        #     if self.grid.get(ox, oy) is preCarrying:
+
+        # logger.info("{}: \ttaking action: \t'{} \t reward: {}' ".format(step_count, ACTIONS[action], reward))
+
+        if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+            reward += self._reward()
+            logger.info("{}:\tsuccess! reward: {}".format(step_count, reward))
+        done = True
+
+        # block that works!
+        # Reward performing the done action next to the target object
+        # ax, ay = self.agent_pos
+        # tx, ty = self.target_pos
+        # # Toggle/pickup action terminates the episode
+        # if action == self.actions.toggle:
+        #     done = True
+        #
+        # logger.info("{}: \ttaking action: \t'{} \t reward: {}' ".format(step_count, ACTIONS[action], reward))
+        #
+        # # # if action == self.actions.done:
+        # # if abs(ax - tx) <= 1 and abs(ay - ty) <= 1:
+        # #     reward = self._reward()
+        # #     logger.info("{}:\tsuccess! reward: {}".format(step_count, reward))
+        # #     done = True
+        # # # else:
+        # # #     reward += -1
+        # # #     logger.info("{}:\tdone for nothing !! reward: {}".format(step_count, reward))
 
         return obs, reward, done, info
 
@@ -176,7 +218,7 @@ class PutNear8x8N3(PutNearEnv):
 
 class PutNear12x12N5(PutNearEnv):
     def __init__(self):
-        super().__init__(size=12, numObjs=4,
+        super().__init__(size=12, numObjs=5,
                         path=[
                             (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
                             (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
@@ -188,7 +230,7 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
                             (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
+                        digblock_positions=[(3, 2), (6, 2), (9, 7), (9, 2), (6, 10)])
 
 
 register(
