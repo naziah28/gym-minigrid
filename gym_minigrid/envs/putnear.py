@@ -137,17 +137,17 @@ class PutNearEnv(MiniGridEnv):
 
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
-            reward += self._reward()
+            # TODO: should be a negative reward
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
+                # todo: give a large penalty
                 done = True
             else:
+                logger.info('picked up object')
                 pass
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
-                logger.info('picked up object')
-
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += self._reward()
                     logger.info('success!')

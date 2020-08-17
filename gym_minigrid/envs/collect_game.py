@@ -1,4 +1,5 @@
 from gym_minigrid.minigrid import *
+from gym_minigrid.multigrid import *
 from gym_minigrid.register import register
 
 class Agent(WorldObj):
@@ -143,7 +144,7 @@ class Agent(WorldObj):
         return self.relative_coords(x, y) is not None
 
 
-class CollectGameEnv(MiniGridEnv):
+class CollectGameEnv(MultiGridEnv):
     """
     Environment in which the agents have to collect the balls
     """
