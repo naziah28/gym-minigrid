@@ -8,4 +8,5 @@ build/*
 dist/*
 .idea/
 
+rl-starter-files/*
 rl-starter-files
