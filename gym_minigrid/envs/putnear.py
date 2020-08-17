@@ -11,6 +11,15 @@ import logging.config
 # Get the logger specified in the file
 logger = logging.getLogger(__name__)
 
+ACTIONS = {
+    0: "left",
+    1: "right",
+    2: "forward",
+    3: "pickup",
+    4: "drop",
+    5: "toggle",
+    6: "done"
+}
 
 def get_graph(path_nodes):
     G = nx.Graph()
@@ -49,6 +58,7 @@ class PutNearEnv(MiniGridEnv):
         self.path = path
         self.digblock_positions = digblock_positions
         self.graph = get_graph(path)
+        self.picked_up = 0
 
         super().__init__(
             grid_size=size,
@@ -90,7 +100,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (self.grid_size-2, self.grid_size-2)
+        goal_pos = (8, 1)
         self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
         objPos.append(goal_pos)
@@ -129,7 +139,7 @@ class PutNearEnv(MiniGridEnv):
 
         preCarrying = self.carrying
 
-        obs, reward, done, info = super().step(action)
+        obs, reward, done, info, step_count = super().step(action)
 
         u, v = self.dir_vec
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
@@ -142,15 +152,27 @@ class PutNearEnv(MiniGridEnv):
                 # todo: give a large penalty
                 done = True
             else:
-                logger.info('picked up object')
+                logger.info('{}: \tpicked up object {}'.format(step_count, reward))
+                self.picked_up = step_count
+
                 pass
+
+        if step_count > self.picked_up and (self.picked_up != 0):
+            if preCarrying:
+                reward += 0.04
+                logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-                    reward += self._reward()
+                    reward += 20# self._reward()
                     logger.info('success!')
+                else:
+                    # dropped right item at wrong location
+                    reward += -1
+                    logger.info('fail! {}'.format(reward))
+                    pass
             done = True
 
         return obs, reward, done, info
