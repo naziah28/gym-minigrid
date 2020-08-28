@@ -100,7 +100,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (5, 6)
+        goal_pos = (7, 6)
         self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
         objPos.append(goal_pos)
@@ -139,7 +139,7 @@ class PutNearEnv(MiniGridEnv):
 
         preCarrying = self.carrying
 
-        obs, reward, done, info, step_count = super().step(action)
+        obs, reward, done, info, step_count = super().step(action) # todo: give state too
 
         u, v = self.dir_vec
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
@@ -159,14 +159,14 @@ class PutNearEnv(MiniGridEnv):
 
         if step_count > self.picked_up and (self.picked_up != 0):
             if preCarrying:
-                reward += 0.04
+                reward += 0.04 # shift to step function
                 logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-                    reward += 20# self._reward()
+                    reward += 20 # self._reward()
                     logger.info('success!')
                 else:
                     # dropped right item at wrong location
@@ -174,6 +174,7 @@ class PutNearEnv(MiniGridEnv):
                     logger.info('fail! {}'.format(reward))
                     pass
             done = True
+            # todo: done if only all digblocks collected
 
         return obs, reward, done, info
 
