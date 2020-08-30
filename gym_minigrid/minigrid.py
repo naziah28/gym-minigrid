@@ -1046,7 +1046,9 @@ class MiniGridEnv(gym.Env):
         # Drop an object
         elif action == self.actions.drop:
             if not fwd_cell and self.carrying:
-                self.grid.set(*fwd_pos, self.carrying)
+                # self.grid.set(*fwd_pos, self.carrying)
+                # make it disappear
+                # self.grid.set(*fwd_pos, None)
                 self.carrying.cur_pos = fwd_pos
                 self.carrying = None
 
@@ -1069,7 +1071,7 @@ class MiniGridEnv(gym.Env):
 
         obs = self.gen_obs()
 
-        return obs, reward, done, {}, self.step_count
+        return obs, reward, done, {}, self.step_count,
 
     def gen_obs_grid(self):
         """
