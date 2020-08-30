@@ -35,6 +35,8 @@ def get_graph(path_nodes):
                 if (node_a[0] == node_b[0] and abs(node_a[1]-node_b[1]) == 1) or \
                         ((node_a[1] == node_b[1]) and (abs(node_a[0]-node_b[0]) == 1)):
                     G.add_edge(node_a, node_b)
+
+    print(G)
     return G
 
 
@@ -57,8 +59,15 @@ class PutNearEnv(MiniGridEnv):
         self.walls = walls
         self.path = path
         self.digblock_positions = digblock_positions
-        self.graph = get_graph(path)
         self.picked_up = 0
+
+        if walls==[]:
+            for i in range(1, self.grid_size - 1):
+                for j in range(1, self.grid_size - 1):
+                    self.path.append((j,i))
+
+        self.graph = get_graph(path)
+
 
         super().__init__(
             grid_size=size,
@@ -107,8 +116,8 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate single dig block
         obj = Ball('blue')
-        blocks = random.sample(self.digblock_positions, self.numObjs)
-        for pos in blocks:
+        self.selected_blocks = random.sample(self.digblock_positions, self.numObjs)
+        for pos in self.selected_blocks:
             self.put_obj(obj, *pos)
             objs.append(('ball', 'blue'))
             objPos.append(pos)
@@ -134,8 +143,6 @@ class PutNearEnv(MiniGridEnv):
 
     def step(self, action):
 
-        agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(10, 10))))
 
         preCarrying = self.carrying
 
@@ -145,6 +152,9 @@ class PutNearEnv(MiniGridEnv):
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
         tx, ty = self.target_pos
 
+        logger.info('{}: \ttaking action {} to {} \t{}'.format(step_count, ACTIONS[action],(ox,oy), reward))
+
+
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
             # TODO: should be a negative reward
@@ -152,40 +162,57 @@ class PutNearEnv(MiniGridEnv):
                 # todo: give a large penalty
                 done = True
             else:
-                logger.info('{}: \tpicked up object {}'.format(step_count, reward))
-                self.picked_up = step_count
-                
+
+                for (bx,by) in self.selected_blocks:
+                    if abs(ox - bx) <= 1 and abs(oy - by) <= 1:
+                        self.selected_blocks.remove((bx,by))
+                        logger.info('{}: \tpicked up object {} {}'.format(step_count, (bx, by), reward))
+                        break
 
                 pass
+
 
         if step_count > self.picked_up and (self.picked_up != 0):
             if preCarrying:
                 reward += 0.04 # shift to step function
-                logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
+                # logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
+                agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+                reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
+
+        # stop pickup at target
+        if action == self.actions.pickup and abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+            reward = -30
+            logger.info('dumb move')
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-                    reward += 20 # self._reward()
-                    logger.info('success!')
+                    reward += 20 * (2-len(self.selected_blocks))# self._reward()
+                    logger.info('dropped block! {}'.format((ox,oy)))
+                    self.picked_up = step_count
 
-
+                    if len(self.selected_blocks) < 1:
+                        logger.info('success!')
+                        done = True
 
                 else:
                     # dropped right item at wrong location
                     reward += -1
                     logger.info('fail! {}'.format(reward))
-                    pass
-            done = True
+                    done = True
             # todo: done if only all digblocks collected
+
+        # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
+
 
         return obs, reward, done, info
 
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
-        super().__init__(size=7, numObjs=2, digblock_positions=[(2,2), (1,4)])
+        super().__init__(size=7, numObjs=2, digblock_positions=[(1,5), (5,1)])
 
 
 class PutNear8x8N3(PutNearEnv):
