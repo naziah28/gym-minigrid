@@ -100,7 +100,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (7, 6)
+        goal_pos = (5, 5)
         self.put_obj(obj, *goal_pos)
         objs.append(('box', 'red'))
         objPos.append(goal_pos)
@@ -154,6 +154,7 @@ class PutNearEnv(MiniGridEnv):
             else:
                 logger.info('{}: \tpicked up object {}'.format(step_count, reward))
                 self.picked_up = step_count
+                
 
                 pass
 
@@ -168,6 +169,9 @@ class PutNearEnv(MiniGridEnv):
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += 20 # self._reward()
                     logger.info('success!')
+
+
+
                 else:
                     # dropped right item at wrong location
                     reward += -1
@@ -181,7 +185,7 @@ class PutNearEnv(MiniGridEnv):
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
-        super().__init__(size=7, numObjs=3)
+        super().__init__(size=7, numObjs=2, digblock_positions=[(2,2), (1,4)])
 
 
 class PutNear8x8N3(PutNearEnv):
