@@ -193,7 +193,6 @@ class PutNearEnv(MiniGridEnv):
                         done = True
                 else:
                     # dropped right item at wrong location
-                    reward += -1
                     logger.info('fail! {}'.format(reward))
                     done = True
             # todo: done if only all digblocks collected
