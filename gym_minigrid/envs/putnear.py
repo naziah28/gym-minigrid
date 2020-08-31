@@ -63,7 +63,7 @@ class PutNearEnv(MiniGridEnv):
         self.dropped_block = 0
         self.goal_pos=goal_pos
 
-        if walls==[]:
+        if walls==[] and path==[]:
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     self.path.append((j,i))
@@ -87,10 +87,11 @@ class PutNearEnv(MiniGridEnv):
         self.grid.vert_wall(width-1, 0)
 
         # add in maze walls
-        if len(self.path)<1:
+        if len(self.path) < 1:
             for wall in self.walls:
                 self.grid.set(*wall, Wall())
         else:
+            print(self.path)
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     if (j, i) not in self.path:
@@ -222,7 +223,6 @@ class PutNear8x8N3(PutNearEnv):
     def __init__(self):
         super().__init__(size=8, numObjs=3,
                          walls=[
-                            # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
                             (3, 2), (4, 2), (5, 2),
                             (5, 3),
                             (1, 4), (2, 4), (3, 4), (5, 4),
