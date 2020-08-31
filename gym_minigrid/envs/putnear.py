@@ -49,10 +49,11 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=6,
+        numObjs=3,
         walls=[],
         path=[],
-        digblock_positions=[]
+        digblock_positions=[(1,4), (4,1), (4,2)],
+        goal_pos=(4,4)
     ):
         self.numObjs = numObjs
         self.grid_size = size
@@ -60,6 +61,7 @@ class PutNearEnv(MiniGridEnv):
         self.path = path
         self.digblock_positions = digblock_positions
         self.picked_up = 0
+        self.goal_pos=goal_pos
 
         if walls==[]:
             for i in range(1, self.grid_size - 1):
@@ -67,7 +69,6 @@ class PutNearEnv(MiniGridEnv):
                     self.path.append((j,i))
 
         self.graph = get_graph(path)
-
 
         super().__init__(
             grid_size=size,
@@ -109,14 +110,13 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (5, 5)
-        self.put_obj(obj, *goal_pos)
+        self.put_obj(obj, *self.goal_pos)
         objs.append(('box', 'red'))
-        objPos.append(goal_pos)
+        objPos.append(self.goal_pos)
 
         # Generate single dig block
-        obj = Ball('blue')
         self.selected_blocks = random.sample(self.digblock_positions, self.numObjs)
+        obj = Ball('blue')
         for pos in self.selected_blocks:
             self.put_obj(obj, *pos)
             objs.append(('ball', 'blue'))
@@ -132,7 +132,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Choose a target object (to put the first object next to)
         self.target_type, self.target_color = 'box', 'red' #objs[targetIdx]
-        self.target_pos = goal_pos
+        self.target_pos = self.goal_pos
 
         self.mission = 'put the %s %s near the %s %s' % (
             self.moveColor,
@@ -143,7 +143,6 @@ class PutNearEnv(MiniGridEnv):
 
     def step(self, action):
 
-
         preCarrying = self.carrying
 
         obs, reward, done, info, step_count = super().step(action) # todo: give state too
@@ -152,17 +151,15 @@ class PutNearEnv(MiniGridEnv):
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
         tx, ty = self.target_pos
 
-        logger.info('{}: \ttaking action {} to {} \t{}'.format(step_count, ACTIONS[action],(ox,oy), reward))
-
+        # logger.info('{}: \ttaking action {} to {} \t{}'.format(step_count, ACTIONS[action],(ox,oy), reward))
 
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
-            # TODO: should be a negative reward
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 # todo: give a large penalty
                 done = True
             else:
-
+                # just match to block
                 for (bx,by) in self.selected_blocks:
                     if abs(ox - bx) <= 1 and abs(oy - by) <= 1:
                         self.selected_blocks.remove((bx,by))
@@ -171,13 +168,12 @@ class PutNearEnv(MiniGridEnv):
 
                 pass
 
-
-        if step_count > self.picked_up and (self.picked_up != 0):
-            if preCarrying:
-                reward += 0.04 # shift to step function
+        # if step_count > self.picked_up and (self.picked_up != 0):
+        #     if preCarrying:
+        #         reward += 0.04 # shift to step function
                 # logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
-                agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-                reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
+                # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+                # reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
 
         # stop pickup at target
         if action == self.actions.pickup and abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
@@ -195,7 +191,6 @@ class PutNearEnv(MiniGridEnv):
                     if len(self.selected_blocks) < 1:
                         logger.info('success!')
                         done = True
-
                 else:
                     # dropped right item at wrong location
                     reward += -1
@@ -205,7 +200,6 @@ class PutNearEnv(MiniGridEnv):
 
         # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
         # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
-
 
         return obs, reward, done, info
 
