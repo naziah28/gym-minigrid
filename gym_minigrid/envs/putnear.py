@@ -49,10 +49,10 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=3,
+        numObjs=2,
         walls=[],
         path=[],
-        digblock_positions=[(1,4), (4,1), (4,2)],
+        digblock_positions=[(1,4), (4,1)],
         goal_pos=(4,4)
     ):
         self.numObjs = numObjs
@@ -206,7 +206,7 @@ class PutNearEnv(MiniGridEnv):
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
-        super().__init__(size=7, numObjs=2, digblock_positions=[(1,5), (5,1)])
+        super().__init__(size=7, numObjs=2, goal_pos=(5,5), digblock_positions=[(1,5), (5,1)])
 
 
 class PutNear8x8N3(PutNearEnv):
