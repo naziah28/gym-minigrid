@@ -35,6 +35,8 @@ def get_graph(path_nodes):
                 if (node_a[0] == node_b[0] and abs(node_a[1]-node_b[1]) == 1) or \
                         ((node_a[1] == node_b[1]) and (abs(node_a[0]-node_b[0]) == 1)):
                     G.add_edge(node_a, node_b)
+
+    print(G)
     return G
 
 
@@ -47,20 +49,26 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=6,
+        numObjs=2,
         walls=[],
         path=[],
-        digblock_positions=[]
+        digblock_positions=[(1,4), (4,1)],
+        goal_pos=(4,4)
     ):
         self.numObjs = numObjs
         self.grid_size = size
         self.walls = walls
         self.path = path
         self.digblock_positions = digblock_positions
-        self.graph = get_graph(path)
-        self.picked_up = 0
+        self.dropped_block = 0
+        self.goal_pos=goal_pos
 
-        logger.info("STARTING")
+        if walls==[]:
+            for i in range(1, self.grid_size - 1):
+                for j in range(1, self.grid_size - 1):
+                    self.path.append((j,i))
+
+        self.graph = get_graph(path)
 
         super().__init__(
             grid_size=size,
@@ -68,7 +76,6 @@ class PutNearEnv(MiniGridEnv):
             # Set this to True for maximum speed
             see_through_walls=True
         )
-
 
     def _gen_grid(self, width, height):
         self.grid = Grid(width, height)
@@ -103,15 +110,14 @@ class PutNearEnv(MiniGridEnv):
 
         # Generate crusher
         obj = Box('red')
-        goal_pos = (5, 2) #(5, 6)
-        self.put_obj(obj, *goal_pos)
+        self.put_obj(obj, *self.goal_pos)
         objs.append(('box', 'red'))
-        objPos.append(goal_pos)
+        objPos.append(self.goal_pos)
 
         # Generate single dig block
-        obj = Ball('blue')
-        blocks = random.sample(self.digblock_positions, self.numObjs)
-        for pos in blocks:
+        self.selected_blocks = random.sample(self.digblock_positions, self.numObjs)
+        for pos in self.selected_blocks:
+            obj = Ball('blue')
             self.put_obj(obj, *pos)
             objs.append(('ball', 'blue'))
             objPos.append(pos)
@@ -126,7 +132,7 @@ class PutNearEnv(MiniGridEnv):
 
         # Choose a target object (to put the first object next to)
         self.target_type, self.target_color = 'box', 'red' #objs[targetIdx]
-        self.target_pos = goal_pos
+        self.target_pos = self.goal_pos
 
         self.mission = 'put the %s %s near the %s %s' % (
             self.moveColor,
@@ -137,70 +143,71 @@ class PutNearEnv(MiniGridEnv):
 
     def step(self, action):
 
-        agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-
         preCarrying = self.carrying
 
-        obs, reward, done, info, step_count = super().step(action)
+        obs, reward, done, info, step_count = super().step(action) # todo: give state too
 
         u, v = self.dir_vec
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
         tx, ty = self.target_pos
 
+        # logger.info('{}: \ttaking action {} to {} \t{}'.format(step_count, ACTIONS[action],(ox,oy), reward))
+
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 # todo: give a large penalty
-                reward += -1
                 done = True
             else:
-                reward += 2
-                logger.info('{}: \tpicked up object {}'.format(step_count, reward))
-                self.picked_up = step_count
+                # just match to block
+                for (bx,by) in self.selected_blocks:
+                    if abs(ox - bx) <= 1 and abs(oy - by) <= 1:
+                        self.selected_blocks.remove((bx,by))
+                        logger.info('{}: \tpicked up object {} {}'.format(step_count, (bx, by), reward))
+
+                        # reset to 0 until next drop is made
+                        self.dropped_block = 0
+                        break
+
                 pass
 
-        # non functional, purely for logging purposes
-        if preCarrying and step_count > self.picked_up:
-            reward += 0.5
-            logger.info("{}: \ttaking action: \t'{} \t reward: {}' ".format(step_count, ACTIONS[action], reward))
+        if step_count > self.dropped_block and (self.dropped_block != 0):
+            logger.info('{}: \tpost drop action {} \t{}'.format(step_count, ACTIONS[action], reward))
+                # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+                # reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
 
-        # # If successfully dropping an object near the target
-        # if action == self.actions.drop and preCarrying:
-        #     logger.info('{}: \tattemping drop {}'.format(step_count, reward))
-        #     if self.grid.get(ox, oy) is preCarrying:
+        # stop pickup at target
+        if action == self.actions.pickup and abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+            reward = -30
+            logger.info('dumb move')
 
-        # logger.info("{}: \ttaking action: \t'{} \t reward: {}' ".format(step_count, ACTIONS[action], reward))
+        # If successfully dropping an object near the target
+        if action == self.actions.drop and preCarrying:
+            if self.grid.get(ox, oy) is preCarrying:
+                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+                    reward += 20 * (2-len(self.selected_blocks))# self._reward()
+                    logger.info('dropped block! {}'.format((ox,oy)))
+                    self.dropped_block = step_count
 
-        if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-            reward += self._reward()
-            logger.info("{}:\tsuccess! reward: {}".format(step_count, reward))
-        done = True
+                    if len(self.selected_blocks) < 1:
+                        logger.info('success!')
+                        done = True
+                else:
+                    # dropped right item at wrong location
+                    reward += -1
+                    logger.info('fail! {}'.format(reward))
+                    done = True
+            # todo: done if only all digblocks collected
 
-        # block that works!
-        # Reward performing the done action next to the target object
-        # ax, ay = self.agent_pos
-        # tx, ty = self.target_pos
-        # # Toggle/pickup action terminates the episode
-        # if action == self.actions.toggle:
-        #     done = True
-        #
-        # logger.info("{}: \ttaking action: \t'{} \t reward: {}' ".format(step_count, ACTIONS[action], reward))
-        #
-        # # # if action == self.actions.done:
-        # # if abs(ax - tx) <= 1 and abs(ay - ty) <= 1:
-        # #     reward = self._reward()
-        # #     logger.info("{}:\tsuccess! reward: {}".format(step_count, reward))
-        # #     done = True
-        # # # else:
-        # # #     reward += -1
-        # # #     logger.info("{}:\tdone for nothing !! reward: {}".format(step_count, reward))
+        # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
 
         return obs, reward, done, info
 
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
-        super().__init__(size=7, numObjs=3)
+        super().__init__(size=7, numObjs=2, goal_pos=(5,5), digblock_positions=[(1,5), (5,1)])
 
 
 class PutNear8x8N3(PutNearEnv):
@@ -218,7 +225,7 @@ class PutNear8x8N3(PutNearEnv):
 
 class PutNear12x12N5(PutNearEnv):
     def __init__(self):
-        super().__init__(size=12, numObjs=5,
+        super().__init__(size=12, numObjs=4,
                         path=[
                             (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
                             (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
@@ -230,7 +237,7 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
                             (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                        digblock_positions=[(3, 2), (6, 2), (9, 7), (9, 2), (6, 10)])
+                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
 
 register(
