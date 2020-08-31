@@ -141,6 +141,8 @@ class PutNearEnv(MiniGridEnv):
             self.target_type
         )
 
+        self.currently_holding = False
+
     def step(self, action):
 
         preCarrying = self.carrying
@@ -158,21 +160,24 @@ class PutNearEnv(MiniGridEnv):
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 # todo: give a large penalty
                 done = True
+            elif self.currently_holding:
+                reward -= 1
             else:
                 # just match to block
                 for (bx,by) in self.selected_blocks:
-                    if abs(ox - bx) <= 1 and abs(oy - by) <= 1:
+                    if abs(ox - bx) <= 1 and abs(oy - by) <= 1 and not self.currently_holding:
                         self.selected_blocks.remove((bx,by))
-                        logger.info('{}: \tpicked up object {} {}'.format(step_count, (bx, by), reward))
-
+                        collected = (self.numObjs-len(self.selected_blocks))
+                        reward += collected
+                        logger.info('{}: \tpicked up object {} {} {}'.format(step_count, collected, (bx, by), reward))
                         # reset to 0 until next drop is made
                         self.dropped_block = 0
+                        self.currently_holding = True
                         break
-
                 pass
 
-        if step_count > self.dropped_block and (self.dropped_block != 0):
-            logger.info('{}: \tpost drop action {} \t{}'.format(step_count, ACTIONS[action], reward))
+        # if step_count > self.dropped_block and (self.dropped_block != 0):
+            # logger.info('{}: \tpost drop action {} \t{}'.format(step_count, ACTIONS[action], reward))
                 # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
                 # reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
 
@@ -185,16 +190,19 @@ class PutNearEnv(MiniGridEnv):
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-                    reward += 20 * (2-len(self.selected_blocks))# self._reward()
+                    reward += 20 * (self.numObjs-len(self.selected_blocks))# self._reward()
                     logger.info('dropped block! {}'.format((ox,oy)))
                     self.dropped_block = step_count
+                    self.currently_holding = False
 
                     if len(self.selected_blocks) < 1:
                         logger.info('success!')
                         done = True
                 else:
                     # dropped right item at wrong location
-                    reward += -1
+                    reward += -2
+                    agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+                    reward -= 0.05 * (len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
                     logger.info('fail! {}'.format(reward))
                     done = True
             # todo: done if only all digblocks collected
@@ -215,11 +223,12 @@ class PutNear8x8N3(PutNearEnv):
         super().__init__(size=8, numObjs=3,
                          walls=[
                             # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
-                            (2, 2), (2, 2), (3, 2), (4, 2), (5, 2),
+                            (3, 2), (4, 2), (5, 2),
                             (5, 3),
                             (1, 4), (2, 4), (3, 4), (5, 4),
                             (1, 5), (2, 5), (3, 5), (5, 5)],
-                         digblock_positions=[(2,3), (4,6), (6,3)]
+                         goal_pos=(6,6),
+                         digblock_positions=[(2,2), (3,6), (6,1)]
                          )
 
 
@@ -237,6 +246,7 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
                             (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
+                         goal_pos=(6,6),
                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
 
