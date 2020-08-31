@@ -35,6 +35,8 @@ def get_graph(path_nodes):
                 if (node_a[0] == node_b[0] and abs(node_a[1]-node_b[1]) == 1) or \
                         ((node_a[1] == node_b[1]) and (abs(node_a[0]-node_b[0]) == 1)):
                     G.add_edge(node_a, node_b)
+
+    print(G)
     return G
 
 
@@ -47,20 +49,26 @@ class PutNearEnv(MiniGridEnv):
     def __init__(
         self,
         size=6,
-        numObjs=6,
+        numObjs=2,
         walls=[],
         path=[],
-        digblock_positions=[],
-        goal_pos=(6,6)
+        digblock_positions=[(1,4), (4,1)],
+        goal_pos=(4,4)
     ):
         self.numObjs = numObjs
         self.grid_size = size
         self.walls = walls
         self.path = path
         self.digblock_positions = digblock_positions
-        self.goal_pos = goal_pos
+        self.picked_up = 0
+        self.goal_pos=goal_pos
+
+        if walls==[]:
+            for i in range(1, self.grid_size - 1):
+                for j in range(1, self.grid_size - 1):
+                    self.path.append((j,i))
+
         self.graph = get_graph(path)
-        self.picked_up_step = 0
 
         super().__init__(
             grid_size=size,
@@ -68,8 +76,6 @@ class PutNearEnv(MiniGridEnv):
             # Set this to True for maximum speed
             see_through_walls=True
         )
-
-        print("start over")
 
     def _gen_grid(self, width, height):
         self.grid = Grid(width, height)
@@ -108,17 +114,15 @@ class PutNearEnv(MiniGridEnv):
         objs.append(('box', 'red'))
         objPos.append(self.goal_pos)
 
-        # Generate dig blocks
+        # Generate single dig block
         self.selected_blocks = random.sample(self.digblock_positions, self.numObjs)
-        self.collected_blocks = 0
+        obj = Ball('blue')
         for pos in self.selected_blocks:
-            obj = Ball('blue')
             self.put_obj(obj, *pos)
             objs.append(('ball', 'blue'))
             objPos.append(pos)
 
         # Randomize the agent start position and orientation
-        # todo: not randomised rn
         self.put_agent(1, 1)
 
         # Choose a random object to be moved
@@ -139,10 +143,7 @@ class PutNearEnv(MiniGridEnv):
 
     def step(self, action):
 
-        # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
         preCarrying = self.carrying
-        # if self.collected_blocks > 0:
-        #     print(preCarrying.type)
 
         obs, reward, done, info, step_count = super().step(action) # todo: give state too
 
@@ -150,78 +151,81 @@ class PutNearEnv(MiniGridEnv):
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
         tx, ty = self.target_pos
 
-        # logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
+        # logger.info('{}: \ttaking action {} to {} \t{}'.format(step_count, ACTIONS[action],(ox,oy), reward))
 
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
-            # TODO: should be a negative reward
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
                 # todo: give a large penalty
                 done = True
             else:
-                self.picked_up_step = step_count
-
-                for (bx, by) in self.selected_blocks:
+                # just match to block
+                for (bx,by) in self.selected_blocks:
                     if abs(ox - bx) <= 1 and abs(oy - by) <= 1:
-                        logger.info('{}: \tpicked up object at {} reward:  {}'.format(step_count, (bx, by), reward))
                         self.selected_blocks.remove((bx,by))
-                        self.collected_blocks += 1
+                        logger.info('{}: \tpicked up object {} {}'.format(step_count, (bx, by), reward))
+                        reward += 0.1*(2-len(self.selected_blocks))
                         break
+
                 pass
 
-        # if step_count > self.picked_up_step and (self.picked_up_step != 0):
+        # if step_count > self.picked_up and (self.picked_up != 0):
         #     if preCarrying:
-        #         reward += 0.02 # shift to step function
+        #         reward += 0.04 # shift to step function
+                # logger.info('{}: \ttaking action {} \t{}'.format(step_count, ACTIONS[action], reward))
+                # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+                # reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
+
+        # stop pickup at target
+        if action == self.actions.pickup and abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+            reward = -30
+            logger.info('dumb move')
 
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
-            # if self.grid.get(ox, oy) is preCarrying:
-            if abs(ox - tx) < 1 and abs(oy - ty) < 1:
-                reward += 10 * self.collected_blocks # scale with collected # self._reward()
-                logger.info('block dropped at {} {}!'.format((ox,oy), reward))
-                # print("{} dropped! at {}".format(step_count, (ox, oy)))
-                # print(preCarrying)
+            if self.grid.get(ox, oy) is preCarrying:
+                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+                    reward += 20 * (2-len(self.selected_blocks))# self._reward()
+                    logger.info('dropped block! {}'.format((ox,oy)))
+                    self.picked_up = step_count
 
-                if len(self.selected_blocks) < 1:
-                    logger.info("success! all blocks DONE: {}".format(self.collected_blocks))
-                    done = True
+                    if len(self.selected_blocks) < 1:
+                        logger.info('success!')
+                        done = True
                 else:
-                    logger.info("{} blocks remaining!".format(len(self.selected_blocks)))
-                    pass
-            else:
-                # dropped right item at wrong location
-                reward += -1
-                logger.info('fail! {}'.format(reward))
-                done = True
-
+                    # dropped right item at wrong location
+                    logger.info('fail! {}'.format(reward))
+                    done = True
             # todo: done if only all digblocks collected
+
+        # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
+        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
 
         return obs, reward, done, info
 
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
-        super().__init__(size=7, numObjs=3)
+        super().__init__(size=7, numObjs=2, goal_pos=(5,5), digblock_positions=[(1,5), (5,1)])
 
 
 class PutNear8x8N3(PutNearEnv):
     def __init__(self):
-        super().__init__(size=8, numObjs=2,
+        super().__init__(size=8, numObjs=3,
                          walls=[
                             # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
                             (2, 2), (2, 2), (3, 2), (4, 2), (5, 2),
                             (5, 3),
                             (1, 4), (2, 4), (3, 4), (5, 4),
                             (1, 5), (2, 5), (3, 5), (5, 5)],
-                         digblock_positions=[(2,3), (6,3)],
-                         goal_pos=(6,6)
+                         digblock_positions=[(2,3), (4,6), (6,3)]
                          )
 
 
 class PutNear12x12N5(PutNearEnv):
     def __init__(self):
         super().__init__(size=12, numObjs=4,
-                         path=[
+                        path=[
                             (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
                             (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
                             (1, 3), (5, 3), (10, 3),
@@ -232,8 +236,7 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
                             (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)],
-                         goal_pos=(6,7))
+                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
 
 register(

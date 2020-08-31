@@ -199,13 +199,22 @@ class Wall(WorldObj):
 
 class Ball(WorldObj):
     def __init__(self, color='blue'):
+        self.dropped = False
+
         super(Ball, self).__init__('ball', color)
 
+    def drop(self):
+        self.dropped = False
+        self.color = 'red'
+
     def can_pickup(self):
+        if self.dropped:
+            return False
         return True
 
     def render(self, img):
         fill_coords(img, point_in_circle(0.5, 0.5, 0.31), COLORS[self.color])
+
 
 class Box(WorldObj):
     def __init__(self, color, contains=None):
@@ -1046,11 +1055,12 @@ class MiniGridEnv(gym.Env):
         # Drop an object
         elif action == self.actions.drop:
             if not fwd_cell and self.carrying:
-                # self.grid.set(*fwd_pos, self.carrying)
-                # make it disappear
-                # self.grid.set(*fwd_pos, None)
+                self.carrying.drop()
+                self.grid.set(*fwd_pos, self.carrying)
                 self.carrying.cur_pos = fwd_pos
                 self.carrying = None
+            else:
+                reward -= 1
 
         # Toggle/activate an object
         elif action == self.actions.toggle:
@@ -1071,7 +1081,7 @@ class MiniGridEnv(gym.Env):
 
         obs = self.gen_obs()
 
-        return obs, reward, done, {}, self.step_count,
+        return obs, reward, done, {}, self.step_count
 
     def gen_obs_grid(self):
         """
