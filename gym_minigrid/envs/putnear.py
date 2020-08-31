@@ -35,8 +35,6 @@ def get_graph(path_nodes):
                 if (node_a[0] == node_b[0] and abs(node_a[1]-node_b[1]) == 1) or \
                         ((node_a[1] == node_b[1]) and (abs(node_a[0]-node_b[0]) == 1)):
                     G.add_edge(node_a, node_b)
-
-    print(G)
     return G
 
 
@@ -91,7 +89,6 @@ class PutNearEnv(MiniGridEnv):
             for wall in self.walls:
                 self.grid.set(*wall, Wall())
         else:
-            print(self.path)
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     if (j, i) not in self.path:
@@ -169,7 +166,7 @@ class PutNearEnv(MiniGridEnv):
                     if abs(ox - bx) <= 1 and abs(oy - by) <= 1 and not self.currently_holding:
                         self.selected_blocks.remove((bx,by))
                         collected = (self.numObjs-len(self.selected_blocks))
-                        reward += collected
+                        reward += 2* collected
                         logger.info('{}: \tpicked up object {} {} {}'.format(step_count, collected, (bx, by), reward))
                         # reset to 0 until next drop is made
                         self.dropped_block = 0
@@ -245,8 +242,9 @@ class PutNear12x12N5(PutNearEnv):
                             (1, 7), (7, 7), (10, 7),
                             (1, 8), (7, 8), (10, 8),
                             (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
-                            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                         goal_pos=(6,6),
+                            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10),
+                            (6, 2), (9, 7), (9, 2), (6, 10), (6,5), (6,4), (7,5), (7,4)],
+                         goal_pos=(6,5),
                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
 
