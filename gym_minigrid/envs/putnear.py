@@ -164,6 +164,7 @@ class PutNearEnv(MiniGridEnv):
                     if abs(ox - bx) <= 1 and abs(oy - by) <= 1:
                         self.selected_blocks.remove((bx,by))
                         logger.info('{}: \tpicked up object {} {}'.format(step_count, (bx, by), reward))
+                        reward += 0.1*(2-len(self.selected_blocks))
                         break
 
                 pass
