@@ -1144,7 +1144,7 @@ class MultiGridEnv(gym.Env):
         else:
             obs = [self.grid.encode_for_agents(self.agents[i].pos) for i in range(len(actions))]
 
-        return obs, rewards, done, {}
+        return obs, rewards, done, {}, self.step_count
 
     def gen_obs_grid(self):
         """

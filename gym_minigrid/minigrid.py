@@ -199,13 +199,20 @@ class Wall(WorldObj):
 
 class Ball(WorldObj):
     def __init__(self, color='blue'):
+        self.dropped = False
+
         super(Ball, self).__init__('ball', color)
 
     def can_pickup(self):
         return True
 
+    def drop(self):
+        self.dropped = True
+        self.color = 'grey'
+
     def render(self, img):
         fill_coords(img, point_in_circle(0.5, 0.5, 0.31), COLORS[self.color])
+
 
 class Box(WorldObj):
     def __init__(self, color, contains=None):
@@ -555,7 +562,7 @@ class MiniGridEnv(gym.Env):
         max_steps=100,
         see_through_walls=False,
         seed=1337,
-        agent_view_size=12
+        agent_view_size=7
     ):
         # Can't set both grid_size and width/height
         if grid_size:
@@ -1006,6 +1013,7 @@ class MiniGridEnv(gym.Env):
     def step(self, action):
         self.step_count += 1
 
+
         reward = -0.05
         done = False
 
@@ -1046,12 +1054,14 @@ class MiniGridEnv(gym.Env):
         # Drop an object
         elif action == self.actions.drop:
             if not fwd_cell and self.carrying:
+                self.carrying.drop()
                 self.grid.set(*fwd_pos, self.carrying)
                 self.carrying.cur_pos = fwd_pos
                 self.carrying = None
 
         # Toggle/activate an object
         elif action == self.actions.toggle:
+            reward = -100
             if fwd_cell:
                 fwd_cell.toggle(self, fwd_pos)
             reward = -20
