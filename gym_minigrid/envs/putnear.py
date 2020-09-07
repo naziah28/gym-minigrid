@@ -205,8 +205,7 @@ class PutNearEnv(MiniGridEnv):
                     done = True
             # todo: done if only all digblocks collected
 
-        # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
+
 
         return obs, reward, done, info
 
@@ -247,21 +246,10 @@ class PutNear12x12N5(PutNearEnv):
                          goal_pos=(6,5),
                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
-class PutNear100x100N6(PutNearEnv):
+class PutNear50x50N6(PutNearEnv):
     def __init__(self):
-        super().__init__(size=100, numObjs=4,
-                        # path=[
-                        #     (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
-                        #     (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
-                        #     (1, 3), (5, 3), (10, 3),
-                        #     (1, 4), (5, 4), (10, 4),
-                        #     (1, 5), (5, 5), (10, 5),
-                        #     (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
-                        #     (1, 7), (7, 7), (10, 7),
-                        #     (1, 8), (7, 8), (10, 8),
-                        #     (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
-                        #     (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)],
-                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
+        super().__init__(size=50, numObjs=4, goal_pos=(48, 48),
+                        digblock_positions=[(10, 10), (45, 35), (45, 10), (30, 40)])
 
 
 register(
@@ -285,6 +273,6 @@ register(
 )
 
 register(
-    id='MiniGrid-PutNear-100x100-N6-v0',
-    entry_point='gym_minigrid.envs:PutNear100x100N6'
+    id='MiniGrid-PutNear-50x50-N6-v0',
+    entry_point='gym_minigrid.envs:PutNear50x50N6'
 )
