@@ -712,7 +712,7 @@ class MultiGridEnv(gym.Env):
 
     metadata = {
         'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': 10
+        'video.frames_per_second': 20
     }
 
     # Enumeration of possible actions
@@ -738,11 +738,11 @@ class MultiGridEnv(gym.Env):
             width=None,
             height=None,
             max_steps=100,
-            see_through_walls=False,
+            see_through_walls=True,
             seed=1,
-            view_size=7,
+            view_size=3,
             agents=None,
-            partial_obs=True
+            partial_obs=False
     ):
         self.agents = agents
 
@@ -769,9 +769,23 @@ class MultiGridEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(width, height, 6),
+            shape=(width, height, 4),
             dtype='uint8'
         )
+
+        # # Observations are dictionaries containing an
+        # # encoding of the grid and a textual 'mission' string
+        # self.observation_space = spaces.Box(
+        #     low=0,
+        #     high=255,
+        #     shape=(self.agent_view_size, self.agent_view_size, 3),
+        #     dtype='uint8'
+        # )
+        # self.observation_space = spaces.Dict({
+        #     'image': self.observation_space
+        # })
+        print("TO DICT:")
+        print(self.observation_space)
 
         self.ob_dim = np.prod(self.observation_space.shape)
         self.ac_dim = self.action_space.n
@@ -842,10 +856,11 @@ class MultiGridEnv(gym.Env):
             'floor': 'F',
             'door': 'D',
             'key': 'K',
-            'ball': 'A',
+            'ball': 'b',
             'box': 'B',
             'goal': 'G',
             'lava': 'V',
+            'agent': 'A'
         }
 
         # Short string for opened door
@@ -864,9 +879,10 @@ class MultiGridEnv(gym.Env):
         for j in range(self.grid.height):
 
             for i in range(self.grid.width):
-                if i == self.agent_pos[0] and j == self.agent_pos[1]:
-                    str += 2 * AGENT_DIR_TO_STR[self.agent_dir]
-                    continue
+                for a in self.agents:
+                    if i == a.pos[0] and j == a.pos[1]:
+                        str += 2 * AGENT_DIR_TO_STR[a.dir]
+                        continue
 
                 c = self.grid.get(i, j)
 
@@ -1082,6 +1098,8 @@ class MultiGridEnv(gym.Env):
     def step(self, actions):
         self.step_count += 1
 
+        print("ACTIONS", actions)
+
         order = np.random.permutation(len(actions))
 
         rewards = np.zeros(len(actions))
@@ -1174,6 +1192,9 @@ class MultiGridEnv(gym.Env):
 
             grids.append(grid)
             vis_masks.append(vis_mask)
+
+
+            print("VISMASK", vis_mask.shape)
 
         return grids, vis_masks
 

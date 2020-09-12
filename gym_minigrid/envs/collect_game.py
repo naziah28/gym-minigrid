@@ -220,13 +220,23 @@ class CollectGameEnv(MultiGridEnv):
         pass
 
     def step(self, actions):
-        obs, rewards, done, info = MiniGridEnv.step(self, actions)
-        return obs, rewards, done, info
+        obs, rewards, done, info, step_no = MultiGridEnv.step(self, actions)
+        return obs, rewards, done, info, step_no
 
 
 class CollectGame4HEnv10x10N2(CollectGameEnv):
     def __init__(self):
         super().__init__(size=10,
+        num_balls=[5],
+        agents_index = [1],
+        balls_index=[0],
+        balls_reward=[1],
+        zero_sum=True)
+
+
+class CollectGame4HEnv6x6N3(CollectGameEnv):
+    def __init__(self):
+        super().__init__(size=6,
         num_balls=[5],
         agents_index = [1,2,3],
         balls_index=[0],
@@ -237,4 +247,11 @@ class CollectGame4HEnv10x10N2(CollectGameEnv):
 register(
     id='MiniGrid-CollectGame4HEnv-10x10-N2-v0',
     entry_point='gym_minigrid.envs:CollectGame4HEnv10x10N2'
+)
+
+
+
+register(
+    id='MiniGrid-CollectGame4HEnv-6x6-N3-v0',
+    entry_point='gym_minigrid.envs:CollectGame4HEnv6x6N3'
 )

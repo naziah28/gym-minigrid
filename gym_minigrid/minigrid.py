@@ -591,6 +591,9 @@ class MiniGridEnv(gym.Env):
             'image': self.observation_space
         })
 
+        print("TO DICT:")
+        print(self.observation_space)
+
         # Range of possible rewards
         self.reward_range = (0, 1)
 
