@@ -228,7 +228,7 @@ class CollectGame4HEnv10x10N2(CollectGameEnv):
     def __init__(self):
         super().__init__(size=10,
         num_balls=[5],
-        agents_index = [1],
+        agents_index = [1,2,3],
         balls_index=[0],
         balls_reward=[1],
         zero_sum=True)

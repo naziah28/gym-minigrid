@@ -1097,9 +1097,6 @@ class MultiGridEnv(gym.Env):
 
     def step(self, actions):
         self.step_count += 1
-
-        print("ACTIONS", actions)
-
         order = np.random.permutation(len(actions))
 
         rewards = np.zeros(len(actions))
