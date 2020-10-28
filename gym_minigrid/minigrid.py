@@ -465,8 +465,6 @@ class Grid:
                     else:
                         array[i, j, :] = v.encode()
 
-                        print(v.encode())
-
         return array
 
     @staticmethod
