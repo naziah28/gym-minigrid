@@ -549,21 +549,21 @@ class MiniGridEnv(gym.Env):
         pickup = 3
         # Drop an object
         drop = 4
-        # Toggle/activate an object
-        toggle = 5
-
-        # Done completing task
-        done = 6
+        # # Toggle/activate an object
+        # toggle = 5
+        #
+        # # Done completing task
+        # done = 6
 
     def __init__(
         self,
         grid_size=None,
         width=None,
         height=None,
-        max_steps=100,
-        see_through_walls=False,
+        max_steps=10000,
+        see_through_walls=True,
         seed=1337,
-        agent_view_size=7
+        agent_view_size=12
     ):
         # Can't set both grid_size and width/height
         if grid_size:
@@ -1060,17 +1060,17 @@ class MiniGridEnv(gym.Env):
                 self.carrying.cur_pos = fwd_pos
                 self.carrying = None
 
-        # Toggle/activate an object
-        elif action == self.actions.toggle:
-            reward = -100
-            if fwd_cell:
-                fwd_cell.toggle(self, fwd_pos)
-            reward = -20
-
-        # Done action (not used by default)
-        elif action == self.actions.done:
-            # reward = -20
-            pass
+        # # Toggle/activate an object
+        # elif action == self.actions.toggle:
+        #     reward = -100
+        #     if fwd_cell:
+        #         fwd_cell.toggle(self, fwd_pos)
+        #     reward = -20
+        #
+        # # Done action (not used by default)
+        # elif action == self.actions.done:
+        #     # reward = -20
+        #     pass
 
         else:
             assert False, "unknown action"

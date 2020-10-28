@@ -188,8 +188,9 @@ class PutNearEnv(MiniGridEnv):
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
-                    reward += 20 * (self.numObjs-len(self.selected_blocks))# self._reward()
-                    logger.info('dropped block! {}'.format((ox,oy)))
+                    reward += 20 * ((self.numObjs-len(self.selected_blocks)))# self._reward()
+                    logger.info('{}: \t dropped block! {} {}'.format((self.numObjs-len(self.selected_blocks)), (ox,oy)))
+                    logger.info(f'{self.step_count}: \t {self.selected_blocks} remaining')
                     self.dropped_block = step_count
                     self.currently_holding = False
 
