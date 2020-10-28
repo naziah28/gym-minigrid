@@ -388,7 +388,8 @@ class Grid:
 
         # Highlight the cell if needed
         if highlight:
-            highlight_img(img)
+            pass
+            # highlight_img(img)
 
         # Downsample the image to perform supersampling/anti-aliasing
         img = downsample(img, subdivs)
@@ -463,6 +464,8 @@ class Grid:
 
                     else:
                         array[i, j, :] = v.encode()
+
+                        print(v.encode())
 
         return array
 
