@@ -737,7 +737,7 @@ class MultiGridEnv(gym.Env):
             grid_size=None,
             width=None,
             height=None,
-            max_steps=100,
+            max_steps=1000,
             see_through_walls=False,
             seed=1,
             view_size=22,
