@@ -187,7 +187,7 @@ class PutNearEnv(MiniGridEnv):
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
-                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
+                if abs(ox - tx) <= 0 and abs(oy - ty) <= 0:
                     reward += 20 * (self.numObjs-len(self.selected_blocks))# self._reward()
                     logger.info(f'{step_count}: dropped block! {len(self.selected_blocks)} remaining')
                     self.dropped_block = step_count
@@ -195,6 +195,7 @@ class PutNearEnv(MiniGridEnv):
 
                     if len(self.selected_blocks) < 1:
                         logger.info('success!')
+                        print('success!')
                         done = True
                 else:
                     # dropped right item at wrong location
