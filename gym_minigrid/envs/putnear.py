@@ -187,7 +187,7 @@ class PutNearEnv(MiniGridEnv):
         # If successfully dropping an object near the target
         if action == self.actions.drop and preCarrying:
             if self.grid.get(ox, oy) is preCarrying:
-                if abs(ox - tx) <= 0 and abs(oy - ty) <= 0:
+                if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += 20 * (self.numObjs-len(self.selected_blocks))# self._reward()
                     logger.info(f'{step_count}: dropped block! {len(self.selected_blocks)} remaining')
                     self.dropped_block = step_count
@@ -253,6 +253,25 @@ class PutNear50x50N6(PutNearEnv):
                         digblock_positions=[(10, 10), (45, 35), (45, 10), (30, 40)])
 
 
+class PutNear22x22N0(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=22, numObjs=4, goal_pos=(18, 18),
+                         walls=[
+                             # rows
+                             (3, 3),     (6, 3), (7, 3), (8, 3), (9,3), (10, 3), (11, 3), (12, 3), (13, 3), (14, 3), (15, 3), (16, 3), (17, 3),
+                             (3, 6),     (6, 6), (7, 6),    (10, 6), (11, 6), (12, 6), (13, 6), (14, 6), (15, 6),
+                             (3, 15),     (6, 15), (7, 15), (8, 15), (9, 15), (10, 15),     (13, 15), (14, 15), (15, 15),
+                             (4, 18), (5, 18), (6, 18), (7, 18), (8, 18), (9, 18), (10, 18), (11, 18), (12, 18), (13, 18), (14, 18), (15, 18),
+
+                            # cols
+                             (3, 4), (3, 5), (3, 7), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14), (3, 16), (3, 17), (3, 18),
+                             (18, 3), (18, 4), (18, 5), (18, 6), (18, 7), (18, 8), (18, 9), (18, 10), (18, 11), (18, 12), (18, 13), (18, 14), (18, 15),
+                             (6, 7), (6, 8), (6, 9), (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15),
+                             (15, 7), (15, 8), (15, 9), (15, 10), (15, 11), (15, 12), (15, 13), (15, 14), (15, 15),
+                         ],
+                        digblock_positions=[(1, 9), (4, 5), (8, 9), (20, 6)])
+
+
 register(
     id='MiniGrid-PutNear-6x6-N2-v0',
     entry_point='gym_minigrid.envs:PutNearEnv'
@@ -276,4 +295,9 @@ register(
 register(
     id='MiniGrid-PutNear-50x50-N6-v0',
     entry_point='gym_minigrid.envs:PutNear50x50N6'
+)
+
+register(
+    id='MiniGrid-PutNear-22x22-N0-v0',
+    entry_point='gym_minigrid.envs:PutNear22x22N0'
 )
