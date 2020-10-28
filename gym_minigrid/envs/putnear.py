@@ -189,7 +189,7 @@ class PutNearEnv(MiniGridEnv):
             if self.grid.get(ox, oy) is preCarrying:
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += 20 * ((self.numObjs-len(self.selected_blocks)))# self._reward()
-                    logger.info('{}: \t dropped block! {} {}'.format(self.selected_blocks, (self.numObjs-len(self.selected_blocks)), (ox,oy)))
+                    logger.info('{}: \t dropped block! {} {}'.format(self.step_count, (self.numObjs-len(self.selected_blocks)), (ox,oy)))
                     logger.info(f'{self.step_count}: \t {self.selected_blocks} remaining')
                     self.dropped_block = step_count
                     self.currently_holding = False
@@ -233,16 +233,16 @@ class PutNear12x12N5(PutNearEnv):
     def __init__(self):
         super().__init__(size=12, numObjs=4,
                         path=[
-                            # (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
-                            # (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
-                            # (1, 3), (5, 3), (10, 3),
-                            # (1, 4), (5, 4), (10, 4),
-                            # (1, 5), (5, 5), (10, 5),
-                            # (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
-                            # (1, 7), (7, 7), (10, 7),
-                            # (1, 8), (7, 8), (10, 8),
-                            # (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
-                            # (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)
+                            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
+                            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
+                            (1, 3), (5, 3), (10, 3),
+                            (1, 4), (5, 4), (10, 4),
+                            (1, 5), (5, 5), (10, 5),
+                            (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
+                            (1, 7), (7, 7), (10, 7),
+                            (1, 8), (7, 8), (10, 8),
+                            (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
+                            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)
                         ],
                          goal_pos=(6,6),
                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
