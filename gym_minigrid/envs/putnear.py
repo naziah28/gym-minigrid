@@ -35,8 +35,6 @@ def get_graph(path_nodes):
                 if (node_a[0] == node_b[0] and abs(node_a[1]-node_b[1]) == 1) or \
                         ((node_a[1] == node_b[1]) and (abs(node_a[0]-node_b[0]) == 1)):
                     G.add_edge(node_a, node_b)
-
-    print(G)
     return G
 
 
@@ -63,7 +61,7 @@ class PutNearEnv(MiniGridEnv):
         self.dropped_block = 0
         self.goal_pos=goal_pos
 
-        if walls==[]:
+        if walls==[] and path==[]:
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     self.path.append((j,i))
@@ -87,7 +85,7 @@ class PutNearEnv(MiniGridEnv):
         self.grid.vert_wall(width-1, 0)
 
         # add in maze walls
-        if len(self.path)<1:
+        if len(self.path) < 1:
             for wall in self.walls:
                 self.grid.set(*wall, Wall())
         else:
@@ -168,7 +166,7 @@ class PutNearEnv(MiniGridEnv):
                     if abs(ox - bx) <= 1 and abs(oy - by) <= 1 and not self.currently_holding:
                         self.selected_blocks.remove((bx,by))
                         collected = (self.numObjs-len(self.selected_blocks))
-                        reward += collected
+                        reward += 2* collected
                         logger.info('{}: \tpicked up object {} {} {}'.format(step_count, collected, (bx, by), reward))
                         # reset to 0 until next drop is made
                         self.dropped_block = 0
@@ -207,8 +205,7 @@ class PutNearEnv(MiniGridEnv):
                     done = True
             # todo: done if only all digblocks collected
 
-        # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-        # print(len(nx.shortest_path(self.graph, source=agent_pos, target=(5, 5))))
+
 
         return obs, reward, done, info
 
@@ -222,7 +219,6 @@ class PutNear8x8N3(PutNearEnv):
     def __init__(self):
         super().__init__(size=8, numObjs=3,
                          walls=[
-                            # (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
                             (3, 2), (4, 2), (5, 2),
                             (5, 3),
                             (1, 4), (2, 4), (3, 4), (5, 4),
@@ -236,19 +232,24 @@ class PutNear12x12N5(PutNearEnv):
     def __init__(self):
         super().__init__(size=12, numObjs=4,
                         path=[
-                            # (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
-                            # (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
-                            # (1, 3), (5, 3), (10, 3),
-                            # (1, 4), (5, 4), (10, 4),
-                            # (1, 5), (5, 5), (10, 5),
-                            # (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
-                            # (1, 7), (7, 7), (10, 7),
-                            # (1, 8), (7, 8), (10, 8),
-                            # (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
-                            # (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)
+                            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
+                            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
+                            (1, 3), (5, 3), (10, 3),
+                            (1, 4), (5, 4), (10, 4),
+                            (1, 5), (5, 5), (10, 5),
+                            (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
+                            (1, 7), (7, 7), (10, 7),
+                            (1, 8), (7, 8), (10, 8),
+                            (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
+                            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)
                         ],
                          goal_pos=(6,6),
                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
+
+class PutNear50x50N6(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=50, numObjs=4, goal_pos=(48, 48),
+                        digblock_positions=[(10, 10), (45, 35), (45, 10), (30, 40)])
 
 
 register(
@@ -269,4 +270,9 @@ register(
 register(
     id='MiniGrid-PutNear-12x12-N5-v0',
     entry_point='gym_minigrid.envs:PutNear12x12N5'
+)
+
+register(
+    id='MiniGrid-PutNear-50x50-N6-v0',
+    entry_point='gym_minigrid.envs:PutNear50x50N6'
 )
