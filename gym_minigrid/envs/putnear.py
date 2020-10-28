@@ -65,8 +65,14 @@ class PutNearEnv(MiniGridEnv):
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     self.path.append((j,i))
+        elif path == [] and len(walls) > 1:
+            for i in range(1, self.grid_size - 1):
+                for j in range(1, self.grid_size - 1):
+                    if (i,j) not in walls:
+                        self.path.append((j,i))
 
         self.graph = get_graph(path)
+        print(self.graph)
 
         super().__init__(
             grid_size=size,
