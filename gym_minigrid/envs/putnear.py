@@ -51,7 +51,9 @@ class PutNearEnv(MiniGridEnv):
         walls=[],
         path=[],
         digblock_positions=[(1,4), (4,1)],
-        goal_pos=(4,4)
+        goal_pos=(4,4),
+        maint_locs=[],
+        agent_start_pos=(1,1),
     ):
         self.numObjs = numObjs
         self.grid_size = size
@@ -59,20 +61,23 @@ class PutNearEnv(MiniGridEnv):
         self.path = path
         self.digblock_positions = digblock_positions
         self.dropped_block = 0
-        self.goal_pos=goal_pos
+        self.goal_pos = goal_pos
+        self.maint_locs = maint_locs
+        self.agent_start_pos = agent_start_pos
 
         if walls==[] and path==[]:
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
-                    self.path.append((j,i))
+                    self.path.append((j, i))
         elif path == [] and len(walls) > 1:
             for i in range(1, self.grid_size - 1):
                 for j in range(1, self.grid_size - 1):
                     if (i,j) not in walls:
-                        self.path.append((j,i))
+                        self.path.append((j, i))
 
         self.graph = get_graph(path)
         print(self.graph)
+        print("agent pos:", self.agent_start_pos)
 
         super().__init__(
             grid_size=size,
@@ -118,7 +123,7 @@ class PutNearEnv(MiniGridEnv):
         objs.append(('box', 'red'))
         objPos.append(self.goal_pos)
 
-        # Generate single dig block
+        # Generate dig block
         self.selected_blocks = random.sample(self.digblock_positions, self.numObjs)
         for pos in self.selected_blocks:
             obj = Ball('blue')
@@ -126,8 +131,16 @@ class PutNearEnv(MiniGridEnv):
             objs.append(('ball', 'blue'))
             objPos.append(pos)
 
+        # Generate dig block
+        for pos in self.maint_locs:
+            obj = Ball('green')
+            self.put_obj(obj, *pos)
+            objs.append(('ball', 'green'))
+            objPos.append(pos)
+
         # Randomize the agent start position and orientation
-        self.put_agent(1, 1)
+        print("place here !",self.agent_start_pos)
+        self.put_agent(*self.agent_start_pos)
 
         # Choose a random object to be moved
         objIdx = 0 #self._rand_int(0, len(objs))
@@ -157,8 +170,6 @@ class PutNearEnv(MiniGridEnv):
         ox, oy = (self.agent_pos[0] + u, self.agent_pos[1] + v)
         tx, ty = self.target_pos
 
-        # logger.info('{}: \ttaking action {} to {} \t{}'.format(step_count, ACTIONS[action],(ox,oy), reward))
-
         # If we picked up the wrong object, terminate the episode
         if action == self.actions.pickup and self.carrying:
             if self.carrying.type != self.move_type or self.carrying.color != self.moveColor:
@@ -180,11 +191,6 @@ class PutNearEnv(MiniGridEnv):
                         break
                 pass
 
-        # if step_count > self.dropped_block and (self.dropped_block != 0):
-            # logger.info('{}: \tpost drop action {} \t{}'.format(step_count, ACTIONS[action], reward))
-                # agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
-                # reward += 0.1 * (13 - len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
-
         # stop pickup at target
         if action == self.actions.pickup and abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
             reward = -30
@@ -196,7 +202,6 @@ class PutNearEnv(MiniGridEnv):
                 if abs(ox - tx) <= 1 and abs(oy - ty) <= 1:
                     reward += 20 * (self.numObjs-len(self.selected_blocks))# self._reward()
                     logger.info(f'{step_count}: dropped block! {len(self.selected_blocks)} remaining')
-                    self.dropped_block = step_count
                     self.currently_holding = False
 
                     if len(self.selected_blocks) < 1:
@@ -212,10 +217,17 @@ class PutNearEnv(MiniGridEnv):
                     done = True
             # todo: done if only all digblocks collected
 
-
-
         return obs, reward, done, info
 
+class PutNearEnv6x6N2(PutNearEnv):
+    def __init__(self):
+        super().__init__(
+            size=6,
+             goal_pos = (4,4),
+             numObjs=3,
+             digblock_positions=[(2, 2), (4, 1), (1, 3)],
+            agent_start_pos=(1, 1),
+        )
 
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
@@ -253,6 +265,7 @@ class PutNear12x12N5(PutNearEnv):
                          goal_pos=(6,6),
                         digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
 
+
 class PutNear50x50N6(PutNearEnv):
     def __init__(self):
         super().__init__(size=50, numObjs=4, goal_pos=(48, 48),
@@ -275,12 +288,13 @@ class PutNear22x22N0(PutNearEnv):
                              (6, 7), (6, 8), (6, 9), (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15),
                              (15, 7), (15, 8), (15, 9), (15, 10), (15, 11), (15, 12), (15, 13), (15, 14), (15, 15),
                          ],
-                        digblock_positions=[(1, 9), (4, 5), (8, 9), (20, 6)])
+                        digblock_positions=[(1, 9), (4, 5), (8, 9), (20, 6)],
+                         maint_locs=[ (13,8), (11,11)])
 
 
 register(
     id='MiniGrid-PutNear-6x6-N2-v0',
-    entry_point='gym_minigrid.envs:PutNearEnv'
+    entry_point='gym_minigrid.envs:PutNearEnv6x6N2'
 )
 
 register(
