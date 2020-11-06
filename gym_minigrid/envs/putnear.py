@@ -219,6 +219,7 @@ class PutNearEnv(MiniGridEnv):
 
         return obs, reward, done, info
 
+
 class PutNearEnv6x6N2(PutNearEnv):
     def __init__(self):
         super().__init__(
@@ -229,6 +230,7 @@ class PutNearEnv6x6N2(PutNearEnv):
             agent_start_pos=(1, 1),
         )
 
+
 class PutNear7x7N4(PutNearEnv):
     def __init__(self):
         super().__init__(size=7, numObjs=2, goal_pos=(5,5), digblock_positions=[(1,5), (5,1)])
@@ -236,43 +238,60 @@ class PutNear7x7N4(PutNearEnv):
 
 class PutNear8x8N3(PutNearEnv):
     def __init__(self):
-        super().__init__(size=8, numObjs=3,
-                         walls=[
-                            (3, 2), (4, 2), (5, 2),
-                            (5, 3),
-                            (1, 4), (2, 4), (3, 4), (5, 4),
-                            (1, 5), (2, 5), (3, 5), (5, 5)],
+        super().__init__(size=8, numObjs=4,
                          goal_pos=(6,6),
-                         digblock_positions=[(2,2), (3,6), (6,1)]
+                         digblock_positions=[(6, 2), (1, 4), (6, 2), (3, 4)],
+                         agent_start_pos=(1,6)
                          )
 
 
+class PutNearEnv10x10N2(PutNearEnv):
+    def __init__(self):
+        super().__init__(
+            size=10,
+            goal_pos = (6,5),
+            numObjs=4,
+            agent_start_pos=(1,8),
+            digblock_positions=[(6, 2), (8, 3), (8, 2), (6, 8)],
+        )
+
+class PutNear12x12N5Walls(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=12,
+                         numObjs=4,
+                        path=[
+                            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1),
+                            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (10, 2),
+                            (1, 3), (5, 3), (10, 3),
+                            (1, 4), (5, 4), (10, 4),
+                            (1, 5), (5, 5), (10, 5),
+                            (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
+                            (1, 7), (7, 7), (10, 7),
+                            (1, 8), (7, 8), (10, 8),
+                            (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
+                            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10),
+                            (6, 2), (9, 7), (9, 2), (6, 10), (6, 5), (6, 4), (7, 5), (7, 4)
+                        ],
+                         goal_pos=(6,5),
+                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)],
+                         agent_start_pos=(1,10))
+
 class PutNear12x12N5(PutNearEnv):
     def __init__(self):
-        super().__init__(size=12, numObjs=4,
-                        path=[
-                            # (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
-                            # (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
-                            # (1, 3), (5, 3), (10, 3),
-                            # (1, 4), (5, 4), (10, 4),
-                            # (1, 5), (5, 5), (10, 5),
-                            # (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
-                            # (1, 7), (7, 7), (10, 7),
-                            # (1, 8), (7, 8), (10, 8),
-                            # (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
-                            # (1, 10), (7, 10), (8, 10), (9, 10), (10, 10)
-                        ],
-                         goal_pos=(6,6),
-                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)])
-
-
-class PutNear50x50N6(PutNearEnv):
-    def __init__(self):
-        super().__init__(size=50, numObjs=4, goal_pos=(48, 48),
-                        digblock_positions=[(10, 10), (45, 35), (45, 10), (30, 40)])
-
+        super().__init__(size=12,
+                         numObjs=4,
+                         goal_pos=(6,5),
+                        digblock_positions=[(6, 2), (9, 7), (9, 2), (6, 10)],
+                         agent_start_pos=(1,10))
 
 class PutNear22x22N0(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=22, numObjs=4, goal_pos=(18, 18),
+                        digblock_positions=[(1, 9), (4, 5), (8, 9), (20, 6)],
+                         maint_locs=[ (13,8), (11,11)],
+                         agent_start_pos=(1,1))
+
+class PutNear22x22N0Walls(PutNearEnv):
     def __init__(self):
         super().__init__(size=22, numObjs=4, goal_pos=(18, 18),
                          walls=[
@@ -289,7 +308,16 @@ class PutNear22x22N0(PutNearEnv):
                              (15, 7), (15, 8), (15, 9), (15, 10), (15, 11), (15, 12), (15, 13), (15, 14), (15, 15),
                          ],
                         digblock_positions=[(1, 9), (4, 5), (8, 9), (20, 6)],
-                         maint_locs=[ (13,8), (11,11)])
+                         maint_locs=[ (13,8), (11,11)],
+                         agent_start_pos=(1,1))
+
+class PutNear50x50N6(PutNearEnv):
+    def __init__(self):
+        super().__init__(size=50, numObjs=10, goal_pos=(25,25),
+                        digblock_positions=[(36, 2), (28, 3), (8, 25), (6, 8), (21, 45), (18, 20), (42, 4), (19, 42), (20, 12),
+                            (3, 40)],
+                         agent_start_pos=(1,8))
+
 
 
 register(
@@ -308,8 +336,23 @@ register(
 )
 
 register(
+    id='MiniGrid-PutNear-10x10-N2-v0',
+    entry_point='gym_minigrid.envs:PutNearEnv10x10N2'
+)
+
+register(
     id='MiniGrid-PutNear-12x12-N5-v0',
     entry_point='gym_minigrid.envs:PutNear12x12N5'
+)
+
+register(
+    id='MiniGrid-PutNear-12x12-N5-v1',
+    entry_point='gym_minigrid.envs:PutNear12x12N5Walls'
+)
+
+register(
+    id='MiniGrid-PutNear-22x22-N0-v0',
+    entry_point='gym_minigrid.envs:PutNear22x22N0'
 )
 
 register(
@@ -318,6 +361,6 @@ register(
 )
 
 register(
-    id='MiniGrid-PutNear-22x22-N0-v0',
-    entry_point='gym_minigrid.envs:PutNear22x22N0'
+    id='MiniGrid-PutNear-22x22-N0-v1',
+    entry_point='gym_minigrid.envs:PutNear22x22N0Walls'
 )
