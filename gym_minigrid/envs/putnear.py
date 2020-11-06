@@ -180,7 +180,7 @@ class PutNearEnv(MiniGridEnv):
                     if abs(ox - bx) <= 1 and abs(oy - by) <= 1 and not self.currently_holding:
                         self.selected_blocks.remove((bx,by))
                         collected = (self.numObjs-len(self.selected_blocks))
-                        reward += 2* collected
+                        reward += 2 * collected
                         logger.info('{}: \tpicked up object {} {} {}'.format(step_count, collected, (bx, by), reward))
                         # reset to 0 until next drop is made
                         self.dropped_block = 0
@@ -207,7 +207,7 @@ class PutNearEnv(MiniGridEnv):
                         done = True
                 else:
                     # dropped right item at wrong location
-                    reward += -2
+                    reward -= 2
                     agent_pos = self.agent_pos if type(self.agent_pos) is tuple else tuple(self.agent_pos)
                     reward -= 0.05 * (len(nx.shortest_path(self.graph, source=agent_pos, target=self.goal_pos)))
                     logger.info('fail! {}'.format(reward))
