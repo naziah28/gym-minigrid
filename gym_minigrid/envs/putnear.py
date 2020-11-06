@@ -77,8 +77,6 @@ class PutNearEnv(MiniGridEnv):
 
         self.graph = get_graph(path)
         print(self.graph)
-        print("agent pos:", self.agent_start_pos)
-
         super().__init__(
             grid_size=size,
             max_steps=5*size,
@@ -139,7 +137,6 @@ class PutNearEnv(MiniGridEnv):
             objPos.append(pos)
 
         # Randomize the agent start position and orientation
-        print("place here !",self.agent_start_pos)
         self.put_agent(*self.agent_start_pos)
 
         # Choose a random object to be moved
